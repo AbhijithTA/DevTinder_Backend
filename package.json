@@ -1,0 +1,19 @@
+{
+  "name": "namaaste---backend",
+  "version": "1.0.0",
+  "description": "Tinder for devs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/app.js"
+  },
+  "keywords": [
+    "node",
+    "js",
+    "javascript"
+  ],
+  "author": "Abhijith T A",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

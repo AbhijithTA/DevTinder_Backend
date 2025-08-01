@@ -1,30 +1,23 @@
-const adminAuth = (req, res, next) => {
-  console.log("Admin auth middleware is checked");
-  const token = "xyzasdf";
-  if (!token) {
-    res.status(404).send("You are not logged in");
-  }
-  const tokenAuthenticated = token === "xyz";
-  if (!tokenAuthenticated) {
-    res.status(401).send("You are not authenticated");
-  } else {
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+
+const userAuth = async (req, res, next) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) {
+      throw new Error("Please login");
+    }
+
+    const decoded = jwt.verify(token, "secretKey@123");
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    req.user = user;
     next();
+  } catch (err) {
+    res.status(404).send("Error: " + err.message);
   }
 };
 
-const userAuth = (req,res,next) =>{
-    console.log("User auth middleware is checked");
-    const token = "xyza";
-    if(!token){
-        res.status(404).send("You are not logged in");
-    }
-    const tokenAuthenticated = token === "xyz"
-    if(!tokenAuthenticated){
-        res.status(401).send("You are not authenticated");
-    }
-    else{
-        next();
-    }
-}
-
-module.exports = {adminAuth,userAuth};
+module.exports = { userAuth };

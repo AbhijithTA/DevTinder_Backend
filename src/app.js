@@ -4,10 +4,15 @@ const User = require("../models/user");
 const app = express();
 const bcrypt = require("bcrypt");
 const validator = require("validator");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+
+const { userAuth } = require("../middlewares/auth");
 
 const { validation } = require("../utils/signUpvalidation");
 
 app.use(express.json());
+app.use(cookieParser());
 
 //Api for getting the user based on the email
 app.get("/user", async (req, res) => {
@@ -52,7 +57,7 @@ app.patch("/user", async (req, res) => {
   }
 });
 
-//post api
+//User sign up API
 app.post("/user", async (req, res) => {
   try {
     //validate the data
@@ -78,6 +83,7 @@ app.post("/user", async (req, res) => {
   }
 });
 
+//login api
 app.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req.body;
@@ -91,12 +97,24 @@ app.post("/login", async (req, res) => {
     const user = await User.findOne({ emailId }).exec();
     if (!user) throw new Error("Invalid credentials");
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    const isPasswordCorrect = await user.validatePassword(password);
     if (!isPasswordCorrect) {
       throw new Error("Invalid credentials");
     } else {
+      const token = await user.getJwt();
+
+      res.cookie("token", token, { httpOnly: true });
       res.send("User logged in successfully", user);
     }
+  } catch (err) {
+    res.status(400).send("Error: " + err.message);
+  }
+});
+
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    const user = req.user;
+    res.send(user);
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
